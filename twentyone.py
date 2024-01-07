@@ -1,3 +1,5 @@
+import random
+
 
 class GameState:
     def __init__(self, turn, sticks, latest_move):
@@ -19,14 +21,17 @@ def player_turn():
     return sticks_taken
 
 
-def twentyone_bot(bot_turn, sticks_left, opponent_move):
+def twentyone_bot(sticks_left, opponent_move):
     """
-    :param bot_turn: Is it the bot's turn?
     :param sticks_left: Number of sticks left
     :param opponent_move: What did opponent just do?
     :return move: How many sticks the bot will take
     """
-
+    if sticks_left % 4 != 0:
+        move = sticks_left % 4
+    else:
+        move = random.randrange(1, 3)
+    return move
 
 def main():
     game_order = 0
@@ -52,7 +57,7 @@ def main():
             case -1:
                 current_player = "Bot"
                 print("It is the bot's turn")
-                game.latest_move = 1
+                game.latest_move = twentyone_bot(game.sticks, game.latest_move)
                 print(f"The bot took {game.latest_move} stick(s)")
         if game.sticks - game.latest_move < 0:
             print(f"There's not enough sticks, there's only {game.sticks} stick(s) left")
