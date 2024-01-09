@@ -1,2 +1,2 @@
 # combinatorial-games
-Game AI for simple trivial combinatorial games.
+Game bot for simple trivial combinatorial games.
