@@ -1,13 +1,7 @@
 import random
 
 
-class GameState:
-    def __init__(self, turn, sticks, latest_move):
-        self.turn = turn
-        self.sticks = sticks
-        self.latest_move = latest_move
-
-class PLayer:
+class Player:
     def __init__(self, name, banned):
         self.name = name
         self.banned = banned
@@ -22,7 +16,8 @@ def choose_mode():
         try:
             mode = int(input("Choose a mode:\n"
                              "1: Standard\n"
-                             "2: Banned\n"))
+                             "2: Banned\n"
+                             "3: Custom\n"))
             break
         except ValueError:
             print("Invalid input, please use number")
@@ -30,13 +25,36 @@ def choose_mode():
         case 1:
             print("Welcome to the 21 game.\n"
                   "There are 21 sticks, each turn you may take 1, 2, or 3 sticks.\n"
-                  "The person to make the last legal move wins.\n")
+                  "The player to make the last legal move wins.\n")
         case 2:
             print("Welcome to the 21 game, banned version.\n"
                   "There are 21 sticks, each turn you may take 1, 2, or 3 sticks.\n"
                   "However, you may not make a move that is banned by your opponent.\n"
-                  "The person to make the last legal move wins.\n")
+                  "The player to make the last legal move wins.\n"
+                  "Work in progress. Please choose another mode")
+            choose_mode()
+        case 3:
+            print("Welcome to custom mode.\n"
+                  "Here you can configure the rules of the game.\n"
+                  "You can configure the minimum and maximum of sticks that can be taken\n"
+                  "and the starting number of sticks.\n"
+                  "The player to make the last legal move wins.\n")
+        case _:
+            print("Please choose a valid mode.")
+            choose_mode()
     return mode
+
+
+def custom_configure():
+    while True:
+        try:
+            min_move= int(input("Choose the MINIMUM number of sticks that can be taken: "))
+            max_move = int(input("Choose the MAXIMUM number of sticks that can be taken: "))
+            sticks = int(input("Choose the starting number of sticks for the game: "))
+            break
+        except ValueError:
+            print("Invalid Input, Please try again")
+    return min_move, max_move, sticks
 
 
 def game_order():
@@ -57,32 +75,40 @@ def game_order():
     return order
 
 
-def player_turn(banned):
+def player_turn(banned, min_move, max_move):
+    """
+    Have user choose a move with corresponding restrictions
+    :param banned: What move is banned
+    :param min_move: Min number of sticks to take
+    :param max_move: Max number of sticks to take
+    :return: The player's move
+    """
     while True:
         try:
-            sticks_taken = int(input("Take how many sticks (1, 2, or 3)?"))
-            if 1 <= sticks_taken <= 3  and sticks_taken != banned:
+            sticks_taken = int(input(f"Take how many sticks ({min_move} - {max_move})?"))
+            if min_move <= sticks_taken <= max_move and sticks_taken != banned:
                 break
         except ValueError:
             print("Invalid input")
         else:
-            print("Invalid move, please enter only 1, 2 or 3")
+            print(f"Invalid move, please enter a number from {min_move} - {max_move}")
     return sticks_taken
 
 
-def standard_bot(sticks_left):
+def standard_bot(sticks_left, min_move, max_move):
     """
     The bot will attempt to reduce the number of sticks left to a multiple of 4, always.
     If it can't (number of sticks is already a multiple of 4), it will randomly move
+    TODO: make it work for min_move != 1
     """
-    if sticks_left % 4 != 0:
-        move = sticks_left % 4
+    if sticks_left % (max_move + 1) != 0:
+        move = sticks_left % (max_move + 1)
     else:
-        move = random.randrange(1, 3)
+        move = random.randrange(min_move, max_move)
     return move
 
 
-def twentyone_bot_ban(sticks_left, banned):
+def banned_bot(sticks_left, banned):
     """
     TODO: The math behind the bot—try just random moves first with check for bannings
     """
@@ -90,27 +116,41 @@ def twentyone_bot_ban(sticks_left, banned):
 
 def main():
     current_player = ""
+    min_move = 0
+    max_move = 0
+    sticks = 0
+    latest_move = 0
     mode = choose_mode()
+    match mode:
+        case 1:
+            min_move = 1
+            max_move = 3
+            sticks = 21
+        case 2:
+            print("meow")
+            # WIP
+        case 3:
+            min_move, max_move, sticks = custom_configure()
     order = game_order()
 
-    game = GameState(order, 21, 0)
-    while game.sticks > 0:
-        match game.turn:
+    # TODO: Change win condition to last legal move made and not if there are no sticks left
+    while sticks > 0:
+        match order:
             case 1:
                 current_player = "Player"
-                game.latest_move = player_turn(0)
-                print(f"You took {game.latest_move} stick(s)")
+                latest_move = player_turn(0, min_move, max_move)
+                print(f"You took {latest_move} stick(s)")
             case -1:
                 current_player = "Bot"
-                game.latest_move = standard_bot(game.sticks)
-                print(f"The bot took {game.latest_move} stick(s)")
-        if game.sticks - game.latest_move < 0:
-            print(f"There's not enough sticks, there's only {game.sticks} stick(s) left")
+                latest_move = standard_bot(sticks, min_move, max_move)
+                print(f"The bot took {latest_move} stick(s)")
+        if sticks - latest_move < 0:
+            print(f"There's not enough sticks, there's only {sticks} stick(s) left")
             continue
-        game.sticks = game.sticks - game.latest_move
-        print(f"There are {game.sticks} sticks left\n"
+        sticks = sticks - latest_move
+        print(f"There are {sticks} sticks left\n"
               "---------------------------")
-        game.turn = game.turn * -1
+        order = order * -1
     print(f"The {current_player} won")
 
 
