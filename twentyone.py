@@ -9,7 +9,7 @@ class Player:
 
 def choose_mode():
     """
-    Have user choose the game mode, responds with description and
+    Have user choose the game mode, responds with description of the mode
     :return mode: corresponding mode number
     """
     while True:
@@ -46,9 +46,13 @@ def choose_mode():
 
 
 def custom_configure():
+    """
+    Let use configure the parameters for custom mode
+    :return min_move, max_move, sticks:
+    """
     while True:
         try:
-            min_move= int(input("Choose the MINIMUM number of sticks that can be taken: "))
+            min_move = int(input("Choose the MINIMUM number of sticks that can be taken: "))
             max_move = int(input("Choose the MAXIMUM number of sticks that can be taken: "))
             sticks = int(input("Choose the starting number of sticks for the game: "))
             break
@@ -95,16 +99,15 @@ def player_turn(banned, min_move, max_move):
     return sticks_taken
 
 
-def standard_bot(sticks_left, min_move, max_move):
+def standard_bot(sticks_left):
     """
     The bot will attempt to reduce the number of sticks left to a multiple of 4, always.
     If it can't (number of sticks is already a multiple of 4), it will randomly move
-    TODO: make it work for min_move != 1
     """
-    if sticks_left % (max_move + 1) != 0:
-        move = sticks_left % (max_move + 1)
+    if sticks_left % 4 != 0:
+        move = sticks_left % 4
     else:
-        move = random.randrange(min_move, max_move)
+        move = random.randrange(1, 3)
     return move
 
 
@@ -112,6 +115,25 @@ def banned_bot(sticks_left, banned):
     """
     TODO: The math behind the bot—try just random moves first with check for bannings
     """
+
+
+def custom_bot(sticks_left, min_move, max_move):
+    """
+
+    """
+    current_mod = sticks_left % (min_move + max_move)
+    # Check if bot has guaranteed path to victory
+    if min_move <= current_mod:
+        # Bot has guaranteed path for victory
+        if current_mod > max_move:
+            # TODO: Add possible variety in this move's case
+            move = max_move
+        else:
+            move = current_mod
+    else:
+        # Bot doesn't have guaranteed path for victory, randomly moves
+        move = random.randrange(min_move, max_move)
+    return move
 
 
 def main():
@@ -134,7 +156,7 @@ def main():
     order = game_order()
 
     # TODO: Change win condition to last legal move made and not if there are no sticks left
-    while sticks > 0:
+    while sticks > min_move:
         match order:
             case 1:
                 current_player = "Player"
@@ -142,7 +164,13 @@ def main():
                 print(f"You took {latest_move} stick(s)")
             case -1:
                 current_player = "Bot"
-                latest_move = standard_bot(sticks, min_move, max_move)
+                match mode:
+                    case 1:
+                        latest_move = standard_bot(sticks)
+                    case 2:
+                        print("WIP")
+                    case 3:
+                        latest_move = custom_bot(sticks, min_move, max_move)
                 print(f"The bot took {latest_move} stick(s)")
         if sticks - latest_move < 0:
             print(f"There's not enough sticks, there's only {sticks} stick(s) left")
