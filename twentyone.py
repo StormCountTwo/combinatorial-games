@@ -30,8 +30,7 @@ def choose_mode():
         try:
             mode = int(input("Choose a mode:\n"
                              "1: Standard\n"
-                             "2: Banned\n"
-                             "3: Custom\n"))
+                             "2: Custom\n"))
             break
         except ValueError:
             print("Invalid input, please use number")
@@ -41,9 +40,6 @@ def choose_mode():
                   "There are 21 sticks, each turn you may take 1, 2, or 3 sticks.\n"
                   "The player to make the last legal move wins.\n")
         case 2:
-            print("Work in progress. Please choose another mode")
-            choose_mode()
-        case 3:
             print("Welcome to custom mode.\n"
                   "Here you can configure the rules of the game.\n"
                   "You can configure the minimum and maximum of sticks that can be taken\n"
@@ -58,7 +54,6 @@ def choose_mode():
 def custom_configure():
     """
     Let use configure the parameters for custom mode
-    :return min_move, max_move, sticks:
     """
     while True:
         try:
@@ -74,33 +69,16 @@ def custom_configure():
 def player_turn(banned, min_move, max_move):
     """
     Have user choose a move with corresponding restrictions
-    :param banned: What move is banned
-    :param min_move: Min number of sticks to take
-    :param max_move: Max number of sticks to take
-    :return: The player's move
     """
     while True:
         try:
             sticks_taken = int(input(f"Take how many sticks ({min_move} - {max_move})?"))
             if min_move <= sticks_taken <= max_move and sticks_taken != banned:
                 break
+            print(f"Invalid move, please enter a number from {min_move} - {max_move}")
         except ValueError:
             print("Invalid input")
-        else:
-            print(f"Invalid move, please enter a number from {min_move} - {max_move}")
     return sticks_taken
-
-
-def standard_bot(sticks_left):
-    """
-    The bot will attempt to reduce the number of sticks left to a multiple of 4, always.
-    If it can't (number of sticks is already a multiple of 4), it will randomly move
-    """
-    if sticks_left % 4 != 0:
-        move = sticks_left % 4
-    else:
-        move = random.randrange(1, 3)
-    return move
 
 
 def banned_bot(sticks_left, banned):
@@ -134,28 +112,21 @@ def run_game(mode, sticks, min_move, max_move, order):
     current_player = ""
     latest_move = 0
     while sticks >= min_move:
-        match order:
-            case 1:
-                current_player = "Player"
-                latest_move = player_turn(0, min_move, max_move)
-                print(f"You took {latest_move} stick(s)")
-            case -1:
-                current_player = "Bot"
-                match mode:
-                    case 1:
-                        latest_move = standard_bot(sticks)
-                    case 2:
-                        print("WIP")
-                    case 3:
-                        latest_move = custom_bot(sticks, min_move, max_move)
-                print(f"The bot took {latest_move} stick(s)")
+        if order == 1:
+            current_player = "Player"
+            latest_move = player_turn(0, min_move, max_move)
+            print(f"You took {latest_move} stick(s)")
+        elif order == 2:
+            current_player = "Bot"
+            latest_move = custom_bot(sticks, min_move, max_move)
+            print(f"The bot took {latest_move} stick(s)")
         if sticks - latest_move < 0:
             print(f"There's not enough sticks, there's only {sticks} stick(s) left")
             continue
         sticks = sticks - latest_move
         print(f"There are {sticks} sticks left\n"
               "---------------------------")
-        order = order * -1
+        order = 3 - order
     print(f"The {current_player} won")
 
 
@@ -178,15 +149,15 @@ def main():
         if yes_or_no("Do you want to go first"):
             order = 1
         else:
-            order = -1
+            order = 2
         run_game(mode, sticks, min_move, max_move, order)
-        if yes_or_no("Do you want to play again"):
-            if yes_or_no("Configure a new game\n"):
-                print("---------------------------")
-                main()
-        else:
-            print("Goodbye")
+
+        if not yes_or_no("Do you want to play again"):
             break
+
+        if yes_or_no("Configure a new game\n"):
+            print("---------------------------")
+            main()
 
 
 if __name__ == '__main__':
